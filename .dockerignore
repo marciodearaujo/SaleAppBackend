@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+/dist
+credencials
+# Cache used by TypeScript's incremental build
+*.tsbuildinfo
+.dockerignore
+.env
