@@ -1,16 +1,17 @@
+import {GetSecretValueCommand, SecretsManagerClient, } from "@aws-sdk/client-secrets-manager";
+import {fromIni} from '@aws-sdk/credential-providers';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
+import {RepositoryMixin} from '@loopback/repository';
+import {RestApplication} from '@loopback/rest';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
 } from '@loopback/rest-explorer';
-import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
+import 'dotenv/config';
 import path from 'path';
 import {MySequence} from './sequence';
-import {SecretsManagerClient,GetSecretValueCommand,} from "@aws-sdk/client-secrets-manager";
-import 'dotenv/config'
 
 
 export {ApplicationConfig};
@@ -56,45 +57,47 @@ export class SaleappApplication extends BootMixin(
     };
   }
 
-  async boot(){
+  async boot() {
 
-    interface AWSSecretManagerDBCredencials{
-      user:string,
-      password:string,
-      engine:string,
-      host:string,
-      port:number,
-      database:string,
-      dbInstanceIdentifier:string
+    interface AWSSecretManagerDBCredencials {
+      user: string,
+      password: string,
+      engine: string,
+      host: string,
+      port: number,
+      database: string,
+      dbInstanceIdentifier: string
     }
 
-    let DBCredencials:AWSSecretManagerDBCredencials
+    let DBCredencials: AWSSecretManagerDBCredencials
 
-      try {
-        const secret_name = process.env.AWS_SECRET_NAME;
+    try {
+      const secret_name = process.env.AWS_SECRET_NAME;
 
-        const client = new SecretsManagerClient({
-          region: "us-east-1",
-        });
-        const response = await client.send(
-          new GetSecretValueCommand({
-            SecretId: secret_name,
-            VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
-          })
-        );
-        if(response.SecretString){
-            DBCredencials=JSON.parse(response.SecretString)
-            DBConnectionConfig={...DBConnectionConfig,
-            user: DBCredencials.user,
-            password: DBCredencials.password,
-            database: DBCredencials.database,
-                  }
+      const client = new SecretsManagerClient({
+        region: "us-east-1",
+        //credentials: fromIni({profile: "default"}),
+      });
+      const response = await client.send(
+        new GetSecretValueCommand({
+          SecretId: secret_name,
+          VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
+        })
+      );
+      if (response.SecretString) {
+        DBCredencials = JSON.parse(response.SecretString)
+        DBConnectionConfig = {
+          ...DBConnectionConfig,
+          user: DBCredencials.user,
+          password: DBCredencials.password,
+          database: DBCredencials.database,
         }
-      } catch (error) {
-        // For a list of exceptions thrown, see
-        // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        throw error;
       }
+    } catch (error) {
+      // For a list of exceptions thrown, see
+      // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+      throw error;
+    }
     await super.boot()
   }
 }
