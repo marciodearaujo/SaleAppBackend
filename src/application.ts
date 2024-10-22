@@ -21,9 +21,9 @@ export let DBConnectionConfig = {
   connector: 'mysql',
   host: process.env.MYSQL_HOST,
   port: process.env.MYSQL_PORT,
-  user: '',
-  password: '',
-  database: ''
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE
 };
 console.log(DBConnectionConfig)
 
